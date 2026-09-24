@@ -3,6 +3,7 @@ const $ = (id) => document.getElementById(id);
 const dayNames = ["", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"];
 const buildingGroups = [
   { value: "group:格物楼", label: "格物楼（全部）", prefix: "格物楼" },
+  { value: "group:文汇楼", label: "文汇楼（全部）", prefix: "文汇楼" },
   { value: "group:力行楼", label: "力行楼（全部）", prefix: "力行楼" }
 ];
 
@@ -15,10 +16,23 @@ function unique(values) { return [...new Set(values.filter(Boolean))].sort((a,b)
 
 function buildingOptions(rooms) {
   const buildings = unique(rooms.map(r => r.building));
-  const groups = buildingGroups
-    .filter(group => buildings.some(building => building.startsWith(group.prefix)))
-    .map(group => `<option value="${group.value}">${group.label}</option>`);
-  return ['<option value="">全部教学楼</option>', ...groups, ...buildings.map(v => `<option>${v}</option>`)].join('');
+  const featured = [];
+  const featuredBuildings = new Set();
+
+  buildingGroups.forEach(group => {
+    const matches = buildings.filter(building => building.startsWith(group.prefix));
+    if (!matches.length) return;
+    featured.push(`<option value="${group.value}">${group.label}</option>`);
+    matches.forEach(building => {
+      featuredBuildings.add(building);
+      featured.push(`<option>${building}</option>`);
+    });
+  });
+
+  const others = buildings
+    .filter(building => !featuredBuildings.has(building))
+    .map(building => `<option>${building}</option>`);
+  return ['<option value="">全部教学楼</option>', ...featured, ...others].join('');
 }
 
 function matchesBuilding(room, selected) {
