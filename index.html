@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Empty Classroom Finder</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">YUNNAN UNIVERSITY · CLASSROOM FINDER</p>
+        <h1>空教室查询</h1>
+        <p class="subtitle">按周次、星期与节次筛选。借用记录不计入占用。</p>
+      </div>
+      <div class="status" id="dataStatus">正在载入数据…</div>
+    </header>
+
+    <section class="filters" aria-label="查询条件">
+      <label>周次<select id="week"></select></label>
+      <label>星期<select id="weekday"></select></label>
+      <label>开始节次<select id="startSection"></select></label>
+      <label>结束节次<select id="endSection"></select></label>
+      <label>校区<select id="campus"><option value="">全部校区</option></select></label>
+      <label>教学楼<select id="building"><option value="">全部教学楼</option></select></label>
+      <label>最少座位<input id="capacity" type="number" min="0" step="1" value="0"></label>
+      <label class="search-label">教室关键词<input id="keyword" type="search" placeholder="例如：文渊楼 201"></label>
+      <button id="searchButton" type="button">查询空教室</button>
+    </section>
+
+    <section class="summary" aria-live="polite">
+      <div><strong id="resultCount">0</strong><span>间可用</span></div>
+      <p id="queryDescription">请选择条件后查询</p>
+    </section>
+
+    <section id="results" class="results"></section>
+  </main>
+  <template id="roomTemplate">
+    <article class="room-card">
+      <div class="room-main">
+        <p class="building"></p>
+        <h2 class="room-name"></h2>
+        <p class="room-code"></p>
+      </div>
+      <div class="room-meta">
+        <span class="campus"></span>
+        <span class="capacity"></span>
+      </div>
+    </article>
+  </template>
+  <script src="app.js"></script>
+</body>
+</html>
