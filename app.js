@@ -1,6 +1,10 @@
 const state = { rooms: [], schedules: [], meta: {} };
 const $ = (id) => document.getElementById(id);
 const dayNames = ["", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"];
+const buildingGroups = [
+  { value: "group:格物楼", label: "格物楼（全部）", prefix: "格物楼" },
+  { value: "group:力行楼", label: "力行楼（全部）", prefix: "力行楼" }
+];
 
 function fillSelect(id, values, labeler = String) {
   const el = $(id);
@@ -8,6 +12,20 @@ function fillSelect(id, values, labeler = String) {
 }
 
 function unique(values) { return [...new Set(values.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'zh-CN')); }
+
+function buildingOptions(rooms) {
+  const buildings = unique(rooms.map(r => r.building));
+  const groups = buildingGroups
+    .filter(group => buildings.some(building => building.startsWith(group.prefix)))
+    .map(group => `<option value="${group.value}">${group.label}</option>`);
+  return ['<option value="">全部教学楼</option>', ...groups, ...buildings.map(v => `<option>${v}</option>`)].join('');
+}
+
+function matchesBuilding(room, selected) {
+  if (!selected) return true;
+  const group = buildingGroups.find(item => item.value === selected);
+  return group ? room.building?.startsWith(group.prefix) : room.building === selected;
+}
 
 function isBorrowRecord(record) {
   const text = `${record.course || ""} ${record.teacher || ""}`;
@@ -35,7 +53,7 @@ function query() {
   const occupied = new Set(state.schedules.filter(r => occupies(r, week, weekday, start, end)).map(r => r.classroomCode));
   const rooms = state.rooms.filter(r => !occupied.has(r.code))
     .filter(r => !campus || r.campus === campus)
-    .filter(r => !building || r.building === building)
+    .filter(r => matchesBuilding(r, building))
     .filter(r => Number(r.capacity || 0) >= capacity)
     .filter(r => !keyword || `${r.name} ${r.code} ${r.building}`.toLowerCase().includes(keyword));
   render(rooms);
@@ -69,7 +87,7 @@ async function init() {
     Object.assign(state, await response.json());
     [...state.rooms, ...state.schedules].forEach(() => {});
     unique(state.rooms.map(r=>r.campus)).forEach(v => $('campus').insertAdjacentHTML('beforeend', `<option>${v}</option>`));
-    unique(state.rooms.map(r=>r.building)).forEach(v => $('building').insertAdjacentHTML('beforeend', `<option>${v}</option>`));
+    $('building').innerHTML = buildingOptions(state.rooms);
     const ignoredBorrowCount = state.schedules.filter(isBorrowRecord).length;
     $('dataStatus').textContent = `${state.meta.termName || '当前学期'} · ${state.rooms.length} 间教室 · ${state.schedules.length} 条课表 · 已忽略 ${ignoredBorrowCount} 条借用`;
     query();
@@ -82,7 +100,7 @@ async function init() {
 $('searchButton').addEventListener('click', query);
 $('campus').addEventListener('change', () => {
   const campus = $('campus').value;
-  const options = unique(state.rooms.filter(r=>!campus||r.campus===campus).map(r=>r.building));
-  $('building').innerHTML = '<option value="">全部教学楼</option>' + options.map(v=>`<option>${v}</option>`).join('');
+  const rooms = state.rooms.filter(r => !campus || r.campus === campus);
+  $('building').innerHTML = buildingOptions(rooms);
 });
 init();
